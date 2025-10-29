@@ -2,6 +2,13 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:3000/api';
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  created_at: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -9,6 +16,12 @@ export interface Task {
   completed: boolean;
   created_at: string;
   updated_at: string;
+  user_id: number;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
 }
 
 export interface ApiResponse<T> {
@@ -23,6 +36,35 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Add a request interceptor to add the token to all requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const authApi = {
+  login: async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+    const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+    if (!response.data.data) throw new Error('Error al iniciar sesión');
+    return response.data.data;
+  },
+
+  register: async (userData: { username: string; email: string; password: string }): Promise<AuthResponse> => {
+    const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', userData);
+    if (!response.data.data) throw new Error('Error al registrar usuario');
+    return response.data.data;
+  },
+
+  getProfile: async (): Promise<User> => {
+    const response = await api.get<ApiResponse<User>>('/auth/profile');
+    if (!response.data.data) throw new Error('Error al obtener perfil');
+    return response.data.data;
+  }
+};
 
 export const tasksApi = {
   getAll: async (): Promise<Task[]> => {

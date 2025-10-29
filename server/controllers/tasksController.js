@@ -2,7 +2,10 @@ const pool = require('../config/database');
 
 const getAllTasks = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM tasks ORDER BY created_at DESC');
+    const result = await pool.query(
+      'SELECT * FROM tasks WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.user.userId]
+    );
     res.json({ success: true, data: result.rows });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -21,8 +24,8 @@ const createTask = async (req, res) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO tasks (title, description) VALUES ($1, $2) RETURNING *',
-      [title.trim(), description?.trim() || '']
+      'INSERT INTO tasks (title, description, user_id) VALUES ($1, $2, $3) RETURNING *',
+      [title.trim(), description?.trim() || '', req.user.userId]
     );
 
     res.status(201).json({ success: true, data: result.rows[0] });

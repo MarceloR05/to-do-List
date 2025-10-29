@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Plus, ListTodo, CheckCircle2, Circle } from 'lucide-react';
+import { Plus, ListTodo, CheckCircle2, Circle, LogOut } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { Task, tasksApi } from './services/api';
 import TaskCard from './components/TaskCard';
 import TaskModal from './components/TaskModal';
+import Auth from './components/Auth';
 
 type FilterType = 'todas' | 'pendientes' | 'completadas';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('token');
+  });
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,14 +27,30 @@ function App() {
     } catch (error) {
       toast.error('Error al cargar las tareas');
       console.error(error);
+      if ((error as any).response?.status === 401) {
+        handleLogout();
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleAuthSuccess = (token: string) => {
+    localStorage.setItem('token', token);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setTasks([]);
+  };
+
   useEffect(() => {
-    loadTasks();
-  }, []);
+    if (isAuthenticated) {
+      loadTasks();
+    }
+  }, [isAuthenticated]);
 
   const handleCreateTask = async (taskData: { title: string; description: string }) => {
     try {
@@ -105,15 +125,28 @@ function App() {
     completadas: tasks.filter(t => t.completed === true).length,
   };
 
+  if (!isAuthenticated) {
+    return <Auth onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
       <Toaster position="top-right" />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <ListTodo className="text-blue-600" size={36} />
-            <h1 className="text-4xl font-bold text-gray-800">To-Do List</h1>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <ListTodo className="text-blue-600" size={36} />
+              <h1 className="text-4xl font-bold text-gray-800">To-Do List</h1>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 transition-colors"
+            >
+              <LogOut size={20} />
+              Cerrar Sesión
+            </button>
           </div>
           <p className="text-gray-600">Organiza tus tareas de manera eficiente</p>
         </div>
