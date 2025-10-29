@@ -9,7 +9,7 @@ interface TaskCardProps {
 }
 
 export default function TaskCard({ task, onToggleStatus, onEdit, onDelete }: TaskCardProps) {
-  const isCompleted = task.status === 'completada';
+  const isCompleted = task.completed === true;
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border-2 transition-all hover:shadow-md ${
@@ -45,7 +45,7 @@ export default function TaskCard({ task, onToggleStatus, onEdit, onDelete }: Tas
               <span className={`px-2 py-1 rounded-full ${
                 isCompleted ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
               }`}>
-                {isCompleted ? 'Completada' : 'Pendiente'}
+                  {isCompleted ? 'Completada' : 'Pendiente'}
               </span>
               <span>•</span>
               <span>{new Date(task.created_at).toLocaleDateString('es-ES')}</span>

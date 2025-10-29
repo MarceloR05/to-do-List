@@ -1,7 +1,7 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import tasksRouter from './routes/tasks.js';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const tasksRouter = require('./routes/tasks');
 
 dotenv.config();
 

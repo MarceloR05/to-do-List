@@ -58,9 +58,9 @@ function App() {
 
   const handleToggleStatus = async (task: Task) => {
     try {
-      const newStatus = task.status === 'pendiente' ? 'completada' : 'pendiente';
-      await tasksApi.update(task.id, { status: newStatus });
-      toast.success(newStatus === 'completada' ? '¡Tarea completada!' : 'Tarea marcada como pendiente');
+      const newCompleted = !task.completed;
+      await tasksApi.update(task.id, { completed: newCompleted });
+      toast.success(newCompleted ? '¡Tarea completada!' : 'Tarea marcada como pendiente');
       loadTasks();
     } catch (error) {
       toast.error('Error al actualizar el estado');
@@ -94,15 +94,15 @@ function App() {
   };
 
   const filteredTasks = tasks.filter(task => {
-    if (filter === 'pendientes') return task.status === 'pendiente';
-    if (filter === 'completadas') return task.status === 'completada';
+    if (filter === 'pendientes') return task.completed === false;
+    if (filter === 'completadas') return task.completed === true;
     return true;
   });
 
   const stats = {
     total: tasks.length,
-    pendientes: tasks.filter(t => t.status === 'pendiente').length,
-    completadas: tasks.filter(t => t.status === 'completada').length,
+    pendientes: tasks.filter(t => t.completed === false).length,
+    completadas: tasks.filter(t => t.completed === true).length,
   };
 
   return (

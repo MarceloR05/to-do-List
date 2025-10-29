@@ -6,7 +6,7 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'pendiente' | 'completada';
+  completed: boolean;
   created_at: string;
   updated_at: string;
 }
