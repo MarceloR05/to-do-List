@@ -9,20 +9,41 @@ Una aplicación web full-stack para gestionar tareas, construida con React + Typ
 - Un editor de código (recomendado: Visual Studio Code)
 - Terminal PowerShell (Windows)
 
+## Características
+
+- ✅ Sistema de autenticación completo (registro, login, logout)
+- ✅ Protección de rutas mediante JWT (JSON Web Tokens)
+- ✅ Tareas privadas por usuario
+- ✅ Contraseñas encriptadas con bcrypt
+- ✅ Validación de datos en frontend y backend
+- ✅ Gestión de sesiones con localStorage
+
 ## Estructura del Proyecto
 
 ```
 todo-list/
-├── server/              # Backend
-│   ├── config/         # Configuración de la base de datos
-│   ├── controllers/    # Lógica de negocio
-│   ├── routes/        # Rutas de la API
-│   ├── database.sql   # Esquema de la BD
-│   └── index.js       # Punto de entrada del servidor
-└── src/                # Frontend
-    ├── components/    # Componentes React
+├── server/                # Backend
+│   ├── config/           # Configuración de la base de datos
+│   ├── controllers/      # Lógica de negocio
+│   │   ├── authController.js  # Control de autenticación
+│   │   └── tasksController.js # Control de tareas
+│   ├── middleware/      # Middlewares
+│   │   └── auth.js     # Protección de rutas
+│   ├── routes/         # Rutas de la API
+│   │   ├── auth.js    # Rutas de autenticación
+│   │   └── tasks.js   # Rutas de tareas
+│   ├── database.sql    # Esquema de la BD
+│   └── index.js        # Punto de entrada del servidor
+└── src/                 # Frontend
+    ├── components/     # Componentes React
+    │   ├── Auth.tsx   # Componente principal de auth
+    │   ├── LoginForm.tsx    # Formulario de login
+    │   ├── RegisterForm.tsx # Formulario de registro
+    │   ├── TaskCard.tsx    # Tarjeta de tarea
+    │   └── TaskModal.tsx   # Modal de tarea
     ├── services/      # Servicios API
-    └── main.tsx       # Punto de entrada del cliente
+    │   └── api.ts    # Cliente API con autenticación
+    └── main.tsx      # Punto de entrada del cliente
 ```
 
 ## Paso a Paso: Creación del Proyecto
@@ -60,9 +81,9 @@ todo-list/
    npm init -y
    ```
 
-2. Instalar dependencias del backend:
+3. Instalar dependencias del backend:
    ```powershell
-   npm install express pg cors dotenv
+   npm install express pg cors dotenv bcryptjs jsonwebtoken
    npm install nodemon -D
    ```
 
@@ -79,13 +100,24 @@ todo-list/
 
 1. Crear el archivo `database.sql`:
    ```sql
+   -- Users table
+   CREATE TABLE users (
+       id SERIAL PRIMARY KEY,
+       username VARCHAR(50) UNIQUE NOT NULL,
+       email VARCHAR(255) UNIQUE NOT NULL,
+       password_hash VARCHAR(255) NOT NULL,
+       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+   );
+
+   -- Tasks table with user_id foreign key
    CREATE TABLE tasks (
        id SERIAL PRIMARY KEY,
        title VARCHAR(255) NOT NULL,
        description TEXT,
        completed BOOLEAN DEFAULT FALSE,
        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
    );
    ```
 
@@ -232,15 +264,56 @@ todo-list/
 - React 18 con TypeScript
 - Vite (bundler)
 - TailwindCSS
-- Axios (cliente HTTP)
+- Axios con interceptors para JWT
 - React Hot Toast (notificaciones)
+- LocalStorage para persistencia de sesión
+- Formularios validados
+- Protección de rutas por autenticación
 
 ### Backend
 - Node.js con Express
 - PostgreSQL
 - node-postgres (pg)
-- CORS
-- dotenv
+- JWT para autenticación
+- bcryptjs para encriptación
+- Middleware de autenticación
+- CORS configurado
+- dotenv para variables de entorno
+
+## Sistema de Autenticación
+
+### Registro de Usuarios
+- Ruta: `POST /api/auth/register`
+- Campos requeridos:
+  - username (único)
+  - email (único)
+  - password (mínimo 6 caracteres)
+- Respuesta: Token JWT y datos del usuario
+
+### Inicio de Sesión
+- Ruta: `POST /api/auth/login`
+- Campos requeridos:
+  - email
+  - password
+- Respuesta: Token JWT y datos del usuario
+
+### Protección de Rutas
+- Middleware de autenticación que verifica el token JWT
+- Header requerido: `Authorization: Bearer <token>`
+- Todas las rutas de tareas están protegidas
+- Cada usuario solo puede ver y modificar sus propias tareas
+
+### Manejo de Sesión (Frontend)
+- Token JWT almacenado en localStorage
+- Interceptor de Axios para incluir el token en cada petición
+- Redirección automática al login si el token expira
+- Cierre de sesión limpia el localStorage
+
+### Seguridad
+- Contraseñas hasheadas con bcrypt
+- Tokens JWT con expiración de 24 horas
+- Validación de datos en ambos lados
+- Manejo de errores detallado
 
 ## Scripts Disponibles
 
